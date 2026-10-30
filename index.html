@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Her Special Day - Retro 8-Bit Adventure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      background-color: #8bac0f;
+      background-image: 
+        radial-gradient(#9bbc0f 15%, transparent 16%),
+        radial-gradient(#9bbc0f 15%, transparent 16%);
+      background-size: 16px 16px;
+      background-position: 0 0, 8px 8px;
+      font-family: 'Press Start 2P', cursive;
+      color: #0f380f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 720px;
+      background-color: #e0f8d0;
+      border: 8px solid #0f380f;
+      box-shadow: 0 10px 0 #0f380f, 0 -4px 0 #0f380f, -4px 0 0 #0f380f, 4px 0 0 #0f380f;
+      padding: 20px;
+      border-radius: 4px;
+      position: relative;
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #8bac0f;
+      padding: 8px 12px;
+      border: 4px solid #0f380f;
+      margin-bottom: 20px;
+      font-size: 10px;
+    }
+    .badge {
+      background: #306230;
+      color: #e0f8d0;
+      padding: 4px 8px;
+      border-radius: 2px;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .screen.active {
+      display: flex;
+    }
+    h1 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      line-height: 1.4;
+      color: #0f380f;
+      text-shadow: 2px 2px #8bac0f;
+    }
+    h2 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #306230;
+    }
+    p {
+      font-size: 10px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      font-family: 'Press Start 2P', cursive;
+      padding: 12px;
+      font-size: 12px;
+      border: 4px solid #0f380f;
+      background-color: #e0f8d0;
+      color: #0f380f;
+      outline: none;
+      margin-bottom: 20px;
+      width: 80%;
+      text-align: center;
+    }
+    .btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 11px;
+      padding: 12px 20px;
+      background-color: #8bac0f;
+      color: #0f380f;
+      border: 4px solid #0f380f;
+      box-shadow: 0 4px 0 #0f380f;
+      cursor: pointer;
+      margin: 8px;
+      transition: all 0.1s;
+    }
+    .btn:hover {
+      background-color: #9bbc0f;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #0f380f;
+    }
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #0f380f;
+    }
+    .btn:disabled {
+      background-color: #9bbc0f;
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+    .timer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+      width: 100%;
+    }
+    .timer-box {
+      background: #8bac0f;
+      border: 4px solid #0f380f;
+      padding: 10px 5px;
+    }
+    .timer-box .num {
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    .timer-box .label {
+      font-size: 8px;
+    }
+    .gift-box-anim {
+      font-size: 50px;
+      margin: 15px 0;
+      cursor: pointer;
+      animation: bounce 1s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-10px); }
+    }
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+      margin: 15px 0;
+    }
+    .game-card {
+      background: #8bac0f;
+      border: 4px solid #0f380f;
+      padding: 12px 8px;
+      cursor: pointer;
+      font-size: 9px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .game-card.completed {
+      background: #306230;
+      color: #e0f8d0;
+    }
+    .game-card .icon {
+      font-size: 24px;
+    }
+    .game-area {
+      width: 100%;
+      height: 220px;
+      background: #9bbc0f;
+      border: 4px solid #0f380f;
+      position: relative;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    #dino-player {
+      width: 24px;
+      height: 24px;
+      background: #0f380f;
+      position: absolute;
+      bottom: 10px;
+      left: 30px;
+    }
+    #dino-obstacle {
+      width: 20px;
+      height: 20px;
+      background: #306230;
+      position: absolute;
+      bottom: 10px;
+      right: -20px;
+    }
+    .whack-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+      padding: 10px;
+    }
+    .mole-hole {
+      background: #8bac0f;
+      border: 2px solid #0f380f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .memory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+      padding: 8px;
+    }
+    .memory-card {
+      background: #8bac0f;
+      border: 2px solid #0f380f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .memory-card.flipped {
+      background: #e0f8d0;
+    }
+    #basket {
+      width: 50px;
+      height: 12px;
+      background: #0f380f;
+      position: absolute;
+      bottom: 10px;
+      left: 135px;
+    }
+    .falling-item {
+      position: absolute;
+      font-size: 18px;
+      top: -20px;
+    }
+    .scramble-letters {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .letter-box {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #0f380f;
+      background: #8bac0f;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+    }
+    .letter-input {
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+    .final-card {
+      background: #8bac0f;
+      border: 4px solid #0f380f;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: left;
+      font-size: 9px;
+      line-height: 1.8;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 2px dashed #0f380f;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <div class="header-bar">
+      <div>PLAYER: <span id="player-display">GUEST</span></div>
+      <div class="badge" id="achievement-badge">STARTING...</div>
+      <div>SCORE: <span id="global-score">0</span></div>
+    </div>
+
+    <!-- SCREEN 1: ENTER NAME -->
+    <div class="screen active" id="screen-name">
+      <div style="font-size: 40px; margin-bottom: 10px;">👑</div>
+      <h1>isi nama dulu ntik</h1>
+      <p>whooos birthday is it?</p>
+      <input type="text" id="name-input" placeholder="Your Name..." maxlength="15">
+      <button class="btn" onclick="submitName()">goooooo!!</button>
+      <p style="font-size: 8px; margin-top: 10px;">Press Enter or click button to continue</p>
+    </div>
+
+    <!-- SCREEN 2: COUNTDOWN TIMER -->
+    <div class="screen" id="screen-timer">
+      <div class="badge">a little something for kk ntik</div>
+      <h1 style="margin-top: 10px;">Aurel Special Day</h1>
+      <p style="font-size: 8px;">is Coming</p>
+      <p>waityah <span class="player-name-text">you</span>~</p>
+
+      <div class="timer-grid">
+        <div class="timer-box"><div class="num" id="days">00</div><div class="label">DAYS</div></div>
+        <div class="timer-box"><div class="num" id="hours">00</div><div class="label">HOURS</div></div>
+        <div class="timer-box"><div class="num" id="minutes">00</div><div class="label">MINS</div></div>
+        <div class="timer-box"><div class="num" id="seconds">05</div><div class="label">SECS</div></div>
+      </div>
+
+      <div class="gift-box-anim" id="gift-icon" onclick="openGiftScreen()">🎁</div>
+      <p style="font-size: 8px;" id="timer-hint">wait, dikit lagi kok...</p>
+      <button class="btn" id="open-gift-btn" onclick="openGiftScreen()" disabled>OPEN NTIKK</button>
+    </div>
+
+    <!-- SCREEN 3: MINI GAMES HUB -->
+    <div class="screen" id="screen-hub">
+      <h1>Mini Games</h1>
+      <p><span class="player-name-text">Player</span>'s Adventure</p>
+
+      <div style="width: 100%; background: #8bac0f; border: 2px solid #0f380f; height: 16px; margin: 10px 0; position: relative;">
+        <div id="progress-bar" style="width: 0%; height: 100%; background: #306230; transition: width 0.3s;"></div>
+        <span id="progress-text" style="position: absolute; width: 100%; text-align: center; top: 2px; font-size: 8px; color: #e0f8d0;">0 / 5 Complete</span>
+      </div>
+
+      <div class="hub-grid">
+        <div class="game-card" id="card-1" onclick="startMiniGame(1)">
+          <div class="icon">🦖</div>
+          <div>Dino Run</div>
+        </div>
+        <div class="game-card" id="card-2" onclick="startMiniGame(2)">
+          <div class="icon">👾</div>
+          <div>Whack-A-Vibe</div>
+        </div>
+        <div class="game-card" id="card-3" onclick="startMiniGame(3)">
+          <div class="icon">🎴</div>
+          <div>Memory Match</div>
+        </div>
+        <div class="game-card" id="card-4" onclick="startMiniGame(4)">
+          <div class="icon">🧺</div>
+          <div>Catch Talents</div>
+        </div>
+        <div class="game-card" id="card-5" onclick="startMiniGame(5)">
+          <div class="icon">🔤</div>
+          <div>Word Scramble</div>
+        </div>
+      </div>
+
+      <button class="btn" id="final-gift-btn" onclick="goToFinalScreen()" style="display: none; background: #306230; color: #e0f8d0; width: 100%; margin-top: 15px;">🎉 CLAIM FINAL GIFT! 🎉</button>
+    </div>
+
+    <!-- SCREEN 4: GAME CONTAINER -->
+    <div class="screen" id="screen-game">
+      <h2 id="game-title">Mini Game Title</h2>
+      <p id="game-desc" style="font-size: 8px;">Game Instructions</p>
+
+      <div class="game-area" id="game-canvas">
+        <!-- Game Elements Injected Here -->
+      </div>
+
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-top: 5px;">
+        <p style="margin:0; font-size: 9px;">Target: <span id="game-target">50</span></p>
+        <p style="margin:0; font-size: 9px;">Current: <span id="game-score">0</span></p>
+      </div>
+
+      <div style="margin-top: 10px;">
+        <button class="btn" id="game-action-btn" onclick="handleGameAction()">JUMP / ACTION</button>
+        <button class="btn" onclick="backToHub()" style="background: #e0f8d0;">Back to Hub</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: FINAL CELEBRATION -->
+    <div class="screen" id="screen-final">
+      <div style="font-size: 30px; margin-bottom: 5px;">🎉👑🎂</div>
+      <h1>GGWP! You Cleared All Games!</h1>
+      <p style="font-size: 8px;">haaapppyyy 18, <span class="player-name-text">Madeline</span>!</p>
+
+      <div class="final-card">
+        <p>happy birthday, sayangku cintaku pacarku</p>
+        <p> i just wanna say how grateful i am to have u in my life, kaka. thank u for always being there, through all the good days, even the bad days, and everything in between :3.</p>
+        <p>imsooo proud of u and eveything you've come. i hope u never stop believing in yourself because i know there's so much more waiting for u ahead! and ill always be here to support u kakaaakkk</p>
+        <p>semogaaa di umur yang baru ini, banyak hal baik yang dateng ke hidup kamu ya kak, semoga semua yang lagi kamu usahain bisa terwujud satu per satu ya sayang :3, and i hope life treats u kindly. thank u for being such an important part of my life hehehehehe, iloveu endlessly, and ill alwaayysss be rooting for u</p>
+        
+        <div class="stat-row">
+          <div>TOTAL SCORE: <b id="final-score">0</b></div>
+          <div>RANK: <b style="color:#0f380f;">S+ ADVENTURER</b></div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="triggerConfetti()" style="background: #306230; color: #e0f8d0; width: 100%;">Collect Your Real Gift! 🎁</button>
+    </div>
+  </div>
+
+  <script>
+    // AUDIO SYNTHESIZER (8-bit Sound Effects)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq, type = 'square', duration = 0.1) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    // STATE VARIABLES
+    let playerName = "Player";
+    let globalScore = 0;
+    let completedGames = new Set();
+    let currentGame = 0;
+    let gameInterval = null;
+    let localGameScore = 0;
+
+    // NAVIGATION
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // STEP 1: NAME SUBMIT
+    function submitName() {
+      const input = document.getElementById('name-input').value.trim();
+      if (input) playerName = input;
+      document.getElementById('player-display').innerText = playerName.toUpperCase();
+      document.querySelectorAll('.player-name-text').forEach(el => el.innerText = playerName);
+      playBeep(440);
+      playBeep(880, 'square', 0.2);
+      showScreen('screen-timer');
+      startCountdown();
+    }
+
+    // STEP 2: COUNTDOWN
+    function startCountdown() {
+      let count = 5;
+      const secEl = document.getElementById('seconds');
+      const interval = setInterval(() => {
+        count--;
+        secEl.innerText = count < 10 ? '0' + count : count;
+        playBeep(300);
+        if (count <= 0) {
+          clearInterval(interval);
+          document.getElementById('timer-hint').innerText = "Gift Unlocked!";
+          const btn = document.getElementById('open-gift-btn');
+          btn.disabled = false;
+          btn.style.background = "#306230";
+          btn.style.color = "#e0f8d0";
+          playBeep(600); playBeep(800); playBeep(1000);
+        }
+      }, 1000);
+    }
+
+    function openGiftScreen() {
+      if (document.getElementById('open-gift-btn').disabled) return;
+      playBeep(523.25);
+      showScreen('screen-hub');
+      updateHub();
+    }
+
+    // STEP 3: HUB & PROGRESS
+    function updateHub() {
+      document.getElementById('global-score').innerText = globalScore;
+      const count = completedGames.size;
+      document.getElementById('progress-bar').style.width = (count / 5 * 100) + '%';
+      document.getElementById('progress-text').innerText = `${count} / 5 Complete`;
+      
+      for (let i = 1; i <= 5; i++) {
+        const card = document.getElementById(`card-${i}`);
+        if (completedGames.has(i)) {
+          card.classList.add('completed');
+        }
+      }
+
+      if (count === 5) {
+        document.getElementById('final-gift-btn').style.display = 'block';
+        document.getElementById('achievement-badge').innerText = "ALL CLEARED!";
+      } else {
+        document.getElementById('achievement-badge').innerText = `STEP ${count+1}/5`;
+      }
+    }
+
+    function backToHub() {
+      clearInterval(gameInterval);
+      showScreen('screen-hub');
+      updateHub();
+    }
+
+    // STEP 4: MINI GAME ROUTER
+    function startMiniGame(gameId) {
+      currentGame = gameId;
+      localGameScore = 0;
+      document.getElementById('game-score').innerText = 0;
+      const canvas = document.getElementById('game-canvas');
+      canvas.innerHTML = '';
+      showScreen('screen-game');
+
+      const actionBtn = document.getElementById('game-action-btn');
+      actionBtn.style.display = 'inline-block';
+
+      if (gameId === 1) {
+        // DINO RUN
+        document.getElementById('game-title').innerText = "Dino Run 🦖";
+        document.getElementById('game-desc').innerText = "Tap JUMP to dodge obstacles! Target: 50 pts";
+        document.getElementById('game-target').innerText = "50";
+        actionBtn.innerText = "JUMP! (Space)";
+
+        canvas.innerHTML = `<div id="dino-player" style="bottom: 10px;"></div><div id="dino-obstacle" style="right: -20px;"></div>`;
+        let isJumping = false;
+        let obsPos = 300;
+        let jumpHeight = 0;
+
+        gameInterval = setInterval(() => {
+          obsPos -= 6;
+          
+          // Reset rintangan jika sudah lewat layar kiri
+          if (obsPos < -20) {
+            obsPos = 300;
+            localGameScore += 10;
+            document.getElementById('game-score').innerText = localGameScore;
+            playBeep(600, 'triangle');
+            if (localGameScore >= 50) winGame();
+          }
+          document.getElementById('dino-obstacle').style.left = obsPos + 'px';
+
+          // --- LOGIKA TABRAKAN (GAME OVER) ---
+          // Posisi horizontal dino ada di left: 30px dengan lebar 24px (artinya posisi X dari 30 s/d 54)
+          // Posisi horizontal rintangan ada di obsPos dengan lebar 20px (artinya posisi X dari obsPos s/d obsPos + 20)
+          // Dino mati jika rintangan berada di antara X: 30-54 DAN tinggi dino (jumpHeight) kurang dari tinggi rintangan (20px)
+          if (obsPos > 30 && obsPos < 54 && jumpHeight < 20) {
+            clearInterval(gameInterval);
+            playBeep(150, 'sawtooth', 0.4); // Suara Game Over
+            alert("GAME OVER! 💥 yah nabrak, hati haati ntik, coba lagi yaa");
+            startMiniGame(1); // Merestart game dari awal
+          }
+        }, 30);
+
+        window.handleGameAction = () => {
+          if (isJumping) return;
+          isJumping = true;
+          playBeep(350);
+          const player = document.getElementById('dino-player');
+          
+          let up = setInterval(() => {
+            if (jumpHeight >= 70) {
+              clearInterval(up);
+              let down = setInterval(() => {
+                if (jumpHeight <= 0) {
+                  clearInterval(down);
+                  isJumping = false;
+                }
+                jumpHeight -= 5;
+                player.style.bottom = (10 + jumpHeight) + 'px';
+              }, 20);
+            }
+            jumpHeight += 5;
+            player.style.bottom = (10 + jumpHeight) + 'px';
+          }, 20);
+        };
+      }
+      else if (gameId === 2) {
+        // WHACK A VIBE
+        document.getElementById('game-title').innerText = "Whack-A-Vibe 👾";
+        document.getElementById('game-desc').innerText = "Click the monsters as they pop up! Target: 50 pts";
+        document.getElementById('game-target').innerText = "50";
+        actionBtn.style.display = 'none';
+
+        canvas.innerHTML = `<div class="whack-grid">${'<div class="mole-hole" onclick="whack(this)"></div>'.repeat(9)}</div>`;
+        
+        gameInterval = setInterval(() => {
+          const holes = document.querySelectorAll('.mole-hole');
+          holes.forEach(h => h.innerText = '');
+          const randomHole = holes[Math.floor(Math.random() * holes.length)];
+          randomHole.innerText = '👾';
+        }, 800);
+
+        window.whack = (el) => {
+          if (el.innerText === '👾') {
+            el.innerText = '💥';
+            localGameScore += 10;
+            document.getElementById('game-score').innerText = localGameScore;
+            playBeep(800);
+            if (localGameScore >= 50) winGame();
+          }
+        };
+      }
+      else if (gameId === 3) {
+        // MEMORY MATCH
+        document.getElementById('game-title').innerText = "Memory Match 🎴";
+        document.getElementById('game-desc').innerText = "Find all matching pairs!";
+        document.getElementById('game-target').innerText = "4 Pairs";
+        actionBtn.style.display = 'none';
+
+        const icons = ['👑', '👑', '💖', '💖', '⭐', '⭐', '🎁', '🎁'].sort(() => Math.random() - 0.5);
+        canvas.innerHTML = `<div class="memory-grid">${icons.map(ic => `<div class="memory-card" data-icon="${ic}" onclick="flipCard(this)">?</div>`).join('')}</div>`;
+
+        let selected = [];
+        window.flipCard = (card) => {
+          if (selected.length < 2 && !card.classList.contains('flipped')) {
+            card.classList.add('flipped');
+            card.innerText = card.dataset.icon;
+            selected.push(card);
+            playBeep(500);
+
+            if (selected.length === 2) {
+              if (selected[0].dataset.icon === selected[1].dataset.icon) {
+                localGameScore += 1;
+                document.getElementById('game-score').innerText = localGameScore + " Pairs";
+                selected = [];
+                playBeep(900);
+                if (localGameScore >= 4) winGame();
+              } else {
+                setTimeout(() => {
+                  selected.forEach(c => { c.classList.remove('flipped'); c.innerText = '?'; });
+                  selected = [];
+                }, 600);
+              }
+            }
+          }
+        };
+      }
+      else if (gameId === 4) {
+        // CATCH TALENTS
+        document.getElementById('game-title').innerText = "Catch The Talents 🧺";
+        document.getElementById('game-desc').innerText = "Move basket to catch falling stars & coins! Target: 50 pts";
+        document.getElementById('game-target').innerText = "50";
+        actionBtn.style.display = 'none';
+
+        canvas.innerHTML = `<div id="basket"></div>`;
+        let basketX = 135;
+
+        canvas.onmousemove = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          basketX = e.clientX - rect.left - 25;
+          document.getElementById('basket').style.left = Math.max(0, Math.min(270, basketX)) + 'px';
+        };
+
+        gameInterval = setInterval(() => {
+          const item = document.createElement('div');
+          item.className = 'falling-item';
+          item.innerText = Math.random() > 0.5 ? '⭐' : '🪙';
+          item.style.left = Math.floor(Math.random() * 280) + 'px';
+          canvas.appendChild(item);
+
+          let itemY = 0;
+          const fall = setInterval(() => {
+            itemY += 4;
+            item.style.top = itemY + 'px';
+
+            if (itemY >= 180 && itemY <= 200) {
+              const itemX = parseInt(item.style.left);
+              if (itemX >= basketX - 15 && itemX <= basketX + 45) {
+                localGameScore += 10;
+                document.getElementById('game-score').innerText = localGameScore;
+                playBeep(750);
+                clearInterval(fall);
+                item.remove();
+                if (localGameScore >= 50) winGame();
+              }
+            }
+            if (itemY > 220) {
+              clearInterval(fall);
+              item.remove();
+            }
+          }, 30);
+        }, 1200);
+      }
+      else if (gameId === 5) {
+        // WORD SCRAMBLE (TRULY SCRAMBLED 5-PART SENTENCE)
+        if (typeof scrambleLevel === 'undefined') window.scrambleLevel = 1;
+        
+        let sentenceParts = [
+          { scrambled: "U O E Y ' R", target: "YOU'RE", hint: "Part 1 of 5" },
+          { scrambled: "O E R T V I F A  R A P T", target: "FAVORITE PART", hint: "Part 2 of 5" },
+          { scrambled: "FO A EFLI", target: "OF A LIFE" hint: "Part 3 of 5" },
+          { scrambled: "I DND'IT", target: "I DIDN'T", hint: "Part 4 of 5" },
+          { scrambled: "NLPA", target: "PLAN", hint: "Part 5 of 5" }
+        ];
+
+        let currentPart = sentenceParts[window.scrambleLevel - 1];
+
+        document.getElementById('game-title').innerText = `Sentence Part (${window.scrambleLevel}/5)`;
+        document.getElementById('game-desc').innerText = currentPart.hint;
+        document.getElementById('game-target').innerText = currentPart.target;
+        actionBtn.innerText = "SUBMIT";
+
+        let scrambledHTML = currentPart.scrambled.split(' ').map(l => `<div class="letter-box" style="width:24px; height:24px; font-size:10px;">${l}</div>`).join('');
+
+        canvas.innerHTML = `
+          <div style="padding-top: 15px;">
+            <p style="font-size: 8px; margin-bottom: 6px;">${currentPart.hint}</p>
+            <div class="scramble-letters" style="gap: 4px; flex-wrap: wrap; justify-content: center;">${scrambledHTML}</div>
+            <input type="text" class="letter-input" id="word-answer" placeholder="Type here..." style="width:80%; font-size: 9px; padding: 8px; margin-top: 8px;">
+            <p style="font-size: 7px; margin-top: 6px; color: #306230;">Progress: Part ${window.scrambleLevel} of 5</p>
+          </div>
+        `;
+
+        window.handleGameAction = () => {
+          const ans = document.getElementById('word-answer').value.trim().toUpperCase().replace(/\s+/g, '');
+          if (ans === currentPart.target) {
+            playBeep(1000);
+            if (window.scrambleLevel < 5) {
+              window.scrambleLevel++;
+              alert(`Correct. Moving to part ${window.scrambleLevel}.`);
+              startMiniGame(5);
+            } else {
+              window.scrambleLevel = 1; 
+              alert(`Sentence complete: "You are the one I want to keep forever."`);
+              winGame();
+            }
+          } else {
+            playBeep(200, 'sawtooth');
+            alert(`Incorrect. Try again.`);
+          }
+        };
+      }
+    }
+
+    function winGame() {
+      clearInterval(gameInterval);
+      completedGames.add(currentGame);
+      globalScore += 100;
+      playBeep(523); playBeep(659); playBeep(783); playBeep(1046, 'square', 0.3);
+      alert("MILESTONE REACHED! 🎉 Stage Completed!");
+      backToHub();
+    }
+
+    // FINAL SCREEN
+    function goToFinalScreen() {
+      document.getElementById('final-score').innerText = globalScore;
+      showScreen('screen-final');
+      triggerConfetti();
+    }
+
+    function triggerConfetti() {
+      playBeep(880, 'square', 0.2);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // KEYBOARD CONTROLS FOR DINO JUMP
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && currentGame === 1) {
+        handleGameAction();
+      }
+      if (e.code === 'Enter' && document.getElementById('screen-name').classList.contains('active')) {
+        submitName();
+      }
+    });
+  </script>
+</body>
+</html>
